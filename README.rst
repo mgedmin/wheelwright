@@ -1,8 +1,15 @@
 My Little Wheelwright
 =====================
 
-This will be a script to download binary Windows eggs of certain packages
-from PyPI and convert them to binary Windows wheels.
+This is a script that downloads binary Windows eggs of certain packages
+from PyPI and converts them to binary Windows wheels.
+
+
+Usage
+-----
+
+Run ``make wheels`` and you'll get a bunch of wheels in ``./wheels``,
+for packages listed in ``packages.ini``.
 
 
 Background

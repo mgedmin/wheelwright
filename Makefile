@@ -1,5 +1,9 @@
 all: .install-stamp
 
+wheels: all
+	bin/python wheelwright.py
+	bin/wheel convert -d wheels installers/*.exe
+
 bin/pip:
 	virtualenv .
 

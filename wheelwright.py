@@ -25,27 +25,33 @@ def load_config():
     return config
 
 
-def get_pypi_info(package_name):
-    url = '%s/%s/json' % (PYPI_URL, package_name)
+def get_pypi_info(package_name, version):
+    if version:
+        url = '%s/%s/%s/json' % (PYPI_URL, package_name, version)
+    else:
+        url = '%s/%s/json' % (PYPI_URL, package_name)
     response = requests.get(url)
     if not response:
         raise Error('Failed to fetch %s: %s %s' % (url, response.status_code, response.reason))
     return response.json()
 
 
-def get_installer_urls(info):
+def get_installer_urls(info, formats):
+    if not formats:
+        formats = ['bdist_wininst']
     for url in info['urls']:
-        if url['packagetype'] == 'bdist_wininst':
+        if url['packagetype'] in formats:
             yield url
 
 
-def download_installers(packages, destdir):
+def download_installers(packages, destdir, versions={}, formats={}):
     for pkg in packages:
-        info = get_pypi_info(pkg)
-        for url in get_installer_urls(info):
-            filename = os.path.join(destdir, url['filename'])
-            if not os.path.exists(filename):
-                download(url['url'], filename)
+        for version in versions.get(pkg) or [None]:
+            info = get_pypi_info(pkg, version)
+            for url in get_installer_urls(info, formats.get(pkg)):
+                filename = os.path.join(destdir, url['filename'])
+                if not os.path.exists(filename):
+                    download(url['url'], filename)
 
 
 def download(url, filename):
@@ -81,11 +87,17 @@ def main():
     set_up_logging()
     config = load_config()
     packages = config.get('wheelwright', 'packages').split()
+    versions = {}
+    formats = {}
+    for pkg in packages:
+        if config.has_section('pkg:' + pkg):
+            versions[pkg] = config.get('pkg:' + pkg, 'versions', '').split()
+            formats[pkg] = config.get('pkg:' + pkg, 'formats', '').split()
     installer_dir = config.get('wheelwright', 'installer-dir', 'installers')
     wheel_dir = config.get('wheelwright', 'wheel-dir', 'wheels')
     try:
         ensure_dir(installer_dir)
-        download_installers(packages, installer_dir)
+        download_installers(packages, installer_dir, versions, formats)
         ensure_dir(wheel_dir)
         create_wheels(installer_dir, wheel_dir)
     except Error as e:

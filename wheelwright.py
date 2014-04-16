@@ -4,6 +4,7 @@ import glob
 import logging
 import os
 import sys
+import argparse
 from ConfigParser import SafeConfigParser
 
 import requests
@@ -19,9 +20,9 @@ class Error(Exception):
     pass
 
 
-def load_config():
+def load_config(config_file='packages.ini'):
     config = SafeConfigParser()
-    config.read(['packages.ini'])
+    config.read([config_file])
     return config
 
 
@@ -30,6 +31,7 @@ def get_pypi_info(package_name, version):
         url = '%s/%s/%s/json' % (PYPI_URL, package_name, version)
     else:
         url = '%s/%s/json' % (PYPI_URL, package_name)
+    log.debug("Fetching %s", url)
     response = requests.get(url)
     if not response:
         raise Error('Failed to fetch %s: %s %s' % (url, response.status_code, response.reason))
@@ -73,9 +75,9 @@ def create_wheels(installer_dir, wheel_dir):
         pass
 
 
-def set_up_logging():
+def set_up_logging(level=logging.INFO):
     log.addHandler(logging.StreamHandler(sys.stdout))
-    log.setLevel(logging.INFO)
+    log.setLevel(level)
 
 
 def ensure_dir(destdir):
@@ -84,8 +86,13 @@ def ensure_dir(destdir):
 
 
 def main():
-    set_up_logging()
-    config = load_config()
+    parser = argparse.ArgumentParser(
+        description="Fetch binary packages from PyPI and build wheels for them")
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-c', '--config-file', default='packages.ini')
+    args = parser.parse_args()
+    set_up_logging(logging.DEBUG if args.verbose else logging.INFO)
+    config = load_config(args.config_file)
     packages = config.get('wheelwright', 'packages').split()
     versions = {}
     formats = {}

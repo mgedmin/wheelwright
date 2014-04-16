@@ -5,7 +5,10 @@ import logging
 import os
 import sys
 import argparse
-from ConfigParser import SafeConfigParser
+try:
+    from configparser import SafeConfigParser
+except ImportError:
+    from ConfigParser import SafeConfigParser
 
 import requests
 
@@ -98,10 +101,10 @@ def main():
     formats = {}
     for pkg in packages:
         if config.has_section('pkg:' + pkg):
-            versions[pkg] = config.get('pkg:' + pkg, 'versions', '').split()
-            formats[pkg] = config.get('pkg:' + pkg, 'formats', '').split()
-    installer_dir = config.get('wheelwright', 'installer-dir', 'installers')
-    wheel_dir = config.get('wheelwright', 'wheel-dir', 'wheels')
+            versions[pkg] = config.get('pkg:' + pkg, 'versions', fallback='').split()
+            formats[pkg] = config.get('pkg:' + pkg, 'formats', fallback='').split()
+    installer_dir = config.get('wheelwright', 'installer-dir', fallback='installers')
+    wheel_dir = config.get('wheelwright', 'wheel-dir', fallback='wheels')
     try:
         ensure_dir(installer_dir)
         download_installers(packages, installer_dir, versions, formats)

@@ -5,7 +5,7 @@ wheels: all
 	bin/wheel convert -d wheels installers/*.exe installers/*.egg
 
 bin/pip:
-	virtualenv .
+	virtualenv -p python3 .
 
 .install-stamp: requirements.txt | bin/pip
 	bin/pip install -r requirements.txt

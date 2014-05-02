@@ -24,7 +24,7 @@ tests.  I'd like to use pip instead, but pip needs wheels instead of eggs.
 
 As a workaround I set up a `Jenkins job <https://jenkins.gedmin.as/job/wheelwright/>`__
 to convert .egg and .exe files to wheels that pip can use.  These are published
-at https://debesis.gedmin.as/wheels/.  When I told my Jenkins build script to ::
+at https://debesis.gedmin.as/wheels/.  Then I told my Jenkins build script to ::
 
     set PIP_FIND_LINKS=https://debesis.gedmin.as/wheels/ 
 

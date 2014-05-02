@@ -21,3 +21,20 @@ A side effect of this is that I cannot use zc.buildout to run zodbbrowser's
 tests.  I'd like to use pip instead, but pip needs wheels instead of eggs.
 
 .. [1] https://gist.github.com/mgedmin/7637559
+
+As a workaround I set up a `Jenkins job <https://jenkins.gedmin.as/job/wheelwright/>`__
+to convert .egg and .exe files to wheels that pip can use.  These are published
+at https://debesis.gedmin.as/wheels/.  When I told my Jenkins build script to ::
+
+    set PIP_FIND_LINKS=https://debesis.gedmin.as/wheels/ 
+
+and now `tox` can install things like `lxml` and `zope.interface`.
+
+
+Future Plans
+------------
+
+Get upstreams to build binary wheels and put them up on PyPI for everyone!
+There's an `open bug <https://github.com/zopefoundation/zope.wineggbuilder/issues/2>`__
+for zope.wineggbuilder which is responsible for, well, actually, everything that *I* need:
+`lxml`, `zope.interface`, ....

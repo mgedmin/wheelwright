@@ -111,7 +111,7 @@ def main():
         ensure_dir(wheel_dir)
         create_wheels(installer_dir, wheel_dir)
     except Error as e:
-        print(e)
+        sys.exit(str(e))
 
 
 if __name__ == '__main__':

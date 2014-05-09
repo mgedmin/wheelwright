@@ -4,6 +4,7 @@ all: .install-stamp
 .PHONY: wheels
 wheels: all
 	bin/python wheelwright.py
+	@mkdir -p wheels
 	bin/wheel convert -d wheels installers/*.exe installers/*.egg
 
 .PHONY: clean

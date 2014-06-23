@@ -1,5 +1,5 @@
 .PHONY: all
-all: .install-stamp
+all: .install-stamp .install-stamp-py2
 
 .PHONY: wheels
 wheels: all
@@ -18,7 +18,10 @@ bin/pip: | bin/pip2
 bin/pip2:
 	virtualenv -p python .
 
-.install-stamp: requirements.txt | bin/pip bin/pip2
+.install-stamp: requirements.txt | bin/pip
 	bin/pip install -r requirements.txt
+	touch $@
+
+.install-stamp-py2: requirements.txt | bin/pip2
 	bin/pip2 install -r requirements.txt
 	touch $@

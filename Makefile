@@ -5,21 +5,21 @@ all: .install-stamp .install-stamp-py2
 wheels: all
 	@mkdir -p wheels
 	bin/pip2 wheel -w wheels -r source-only.txt --no-deps
-	bin/python wheelwright.py
+	bin/python3 wheelwright.py
 	bin/wheel convert -d wheels installers/*.exe installers/*.egg
 
 .PHONY: clean
 clean:
-	rm -rf bin build include installers lib local wheels .install-stamp
+	rm -rf bin build include installers lib local wheels/*.whl .install-stamp .install-stamp-py2
 
-bin/pip: | bin/pip2
+bin/pip3: | bin/pip2
 	virtualenv -p python3 .
 
 bin/pip2:
-	virtualenv -p python .
+	virtualenv -p python2 .
 
-.install-stamp: requirements.txt | bin/pip
-	bin/pip install -r requirements.txt
+.install-stamp: requirements.txt | bin/pip3
+	bin/pip3 install -r requirements.txt
 	touch $@
 
 .install-stamp-py2: requirements.txt | bin/pip2

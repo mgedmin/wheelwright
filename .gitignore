@@ -6,3 +6,4 @@ local/
 installers
 wheels
 build/
+.install-stamp-py2

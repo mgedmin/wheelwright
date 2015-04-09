@@ -1,4 +1,34 @@
 #!/usr/bin/env python3
+"""
+Download binary egg/exe packages from PyPI and convert them to wheels.
+
+Reads packages.ini for a list of packages.  The format of the INI file is
+
+    [wheelwright]
+    # list of package names to process
+    packages = ...
+
+    # where to put downloaded binary packages
+    installer-dir = ...
+
+    # where to put converted wheels
+    wheel-dir = ...
+
+    # every package can be optionally configured like this:
+    [pkg:name]
+    # versions to process (e.g. if new versions have whl files on PyPI,
+    # but old ones have only .egg/.exe installers you may list all the
+    # old versions you want to support here)
+    versions = ...
+    # installer formats to download, defaults to bdist_wininst
+    formats = ...
+
+Bugs:
+
+* currently it downloads the packages but doesn't actually convert them
+  (instead the Makefile has a blanked bin/wheel convert installers/*)
+
+"""
 
 import glob
 import logging

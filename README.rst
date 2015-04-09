@@ -38,7 +38,7 @@ Some pure-Python packages also trip up the SSL bug, even when I use pip:
 specifically, those packages that use setup_requires to depend on packages
 not already installed.
 
-Wheels can be built for these if you list them in ``source-only.txt``.
+Wheels can be built for these if you list them in ``pure-python.txt``.
 This is done by the Makefile, not by wheelwright.py, at the moment.
 
 

@@ -4,7 +4,7 @@ all: .install-stamp .install-stamp-py2
 .PHONY: wheels
 wheels: all
 	bin/python3 wheelwright.py
-	bin/pip2 wheel -f wheels -w wheels -r source-only.txt --no-deps
+	bin/pip2 wheel -f wheels -w wheels -r pure-python.txt --no-deps
 
 .PHONY: clean
 clean:

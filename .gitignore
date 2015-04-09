@@ -7,3 +7,4 @@ installers
 wheels
 build/
 .install-stamp-py2
+__pycache__/

@@ -1,14 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import glob
 import logging
 import os
 import sys
 import argparse
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 import requests
 

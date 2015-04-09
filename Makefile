@@ -6,7 +6,6 @@ wheels: all
 	@mkdir -p wheels
 	bin/pip2 wheel -w wheels -r source-only.txt --no-deps
 	bin/python3 wheelwright.py
-	bin/wheel convert -d wheels installers/*.exe installers/*.egg
 
 .PHONY: clean
 clean:

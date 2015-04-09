@@ -23,11 +23,6 @@ Reads packages.ini for a list of packages.  The format of the INI file is
     # installer formats to download, defaults to bdist_wininst
     formats = ...
 
-Bugs:
-
-* currently it downloads the packages but doesn't actually convert them
-  (instead the Makefile has a blanked bin/wheel convert installers/*)
-
 """
 
 import glob
@@ -38,6 +33,11 @@ import argparse
 from configparser import SafeConfigParser
 
 import requests
+import wheel.tool
+import wheel.wininst2wheel
+from wheel.egg2wheel import egg_info_re
+# In case this changes later: wheel.egg2wheel defines
+#   egg_info_re = re.compile(r'(?P<name>.+?)-(?P<ver>.+?)(-(?P<pyver>.+?))?(-(?P<arch>.+?))?.egg', re.VERBOSE)
 
 
 PYPI_URL = 'https://pypi.python.org/pypi'
@@ -97,12 +97,64 @@ def download(url, filename):
     os.rename(filename + '.tmp', filename)
 
 
-def create_wheels(installer_dir, wheel_dir):
-    for filename in glob.glob(os.path.join(installer_dir, '*.exe')):
-        # TODO: determine the name of the .whl
-        # check if it already exists
-        # if not, invoke bin/wheel convert -d ${wheel_dir} {filename}
-        pass
+def find_installers(installer_dir):
+    return (glob.glob(os.path.join(installer_dir, '*.exe')) +
+            glob.glob(os.path.join(installer_dir, '*.egg')))
+
+
+def name_of_corresponding_wheel(installer):
+    filename = os.path.basename(installer)
+    if filename.endswith('.egg'):
+        # e.g. installers/ZODB3-3.10.5-py2.7-win-amd64.egg becomes
+        # e.g. wheels/ZODB3-3.10.5-cp27-none-win_amd64.whl
+        info = egg_info_re.match(filename).groupdict()
+        dist_info = "{name}-{ver}".format(**info)
+        abi = 'none'
+        pyver = info['pyver'].replace('.', '')
+        arch = (info['arch'] or 'any').replace('.', '_').replace('-', '_')
+        if arch != 'any':
+            # assume all binary eggs are for CPython
+            pyver = 'cp' + pyver[2:]
+        wheel_name = '-'.join((dist_info, pyver, abi, arch))
+        return wheel_name + '.whl'
+    if filename.endswith('.exe'):
+        # Not passing egginfo_name to parse_info() is wrong, but works on
+        # the packages I care about.
+        info = wheel.wininst2wheel.parse_info(filename, None)
+        dist_info = "{name}-{ver}".format(**info)
+        abi = 'none'
+        pyver = info['pyver']
+        arch = (info['arch'] or 'any').replace('.', '_').replace('-', '_')
+        if arch != 'any':
+            pyver = pyver.replace('py', 'cp')
+        wheel_name = '-'.join((dist_info, pyver, abi, arch))
+        return wheel_name + '.whl'
+
+
+def create_wheels(installer_dir, wheel_dir, verbose=False):
+    n = 0
+    for filename in sorted(find_installers(installer_dir)):
+        basename = os.path.basename(filename)
+        wheel_filename = name_of_corresponding_wheel(filename)
+        if not wheel_filename:
+            log.debug("Skipping %s (couldn't parse the filename)", basename)
+            continue
+        wheel_pathname = os.path.join(wheel_dir, wheel_filename)
+        if os.path.exists(wheel_pathname):
+            log.debug('Skipping %s (%s exists)', basename, wheel_filename)
+            continue
+        convert_to_wheel(filename, wheel_dir, wheel_filename, verbose=verbose)
+        n += 1
+    if n:
+        log.info('Created %d wheels', n)
+    else:
+        log.info("Everything's up to date")
+
+
+def convert_to_wheel(filename, wheel_dir, wheel_filename, verbose=False):
+    if verbose:
+        sys.stdout.write('Converting ')
+    wheel.tool.convert([filename], wheel_dir, verbose=verbose)
 
 
 def set_up_logging(level=logging.INFO):
@@ -120,6 +172,8 @@ def main():
         description="Fetch binary packages from PyPI and build wheels for them")
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-c', '--config-file', default='packages.ini')
+    parser.add_argument('--no-download', action='store_false', dest='download', default=True,
+                        help='skip the downloading, just convert installers already in place')
     args = parser.parse_args()
     set_up_logging(logging.DEBUG if args.verbose else logging.INFO)
     config = load_config(args.config_file)
@@ -134,9 +188,10 @@ def main():
     wheel_dir = config.get('wheelwright', 'wheel-dir', fallback='wheels')
     try:
         ensure_dir(installer_dir)
-        download_installers(packages, installer_dir, versions, formats)
+        if args.download:
+            download_installers(packages, installer_dir, versions, formats)
         ensure_dir(wheel_dir)
-        create_wheels(installer_dir, wheel_dir)
+        create_wheels(installer_dir, wheel_dir, verbose=args.verbose)
     except Error as e:
         sys.exit(str(e))
 

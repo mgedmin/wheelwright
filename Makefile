@@ -3,9 +3,8 @@ all: .install-stamp .install-stamp-py2
 
 .PHONY: wheels
 wheels: all
-	@mkdir -p wheels
-	bin/pip2 wheel -w wheels -r source-only.txt --no-deps
 	bin/python3 wheelwright.py
+	bin/pip2 wheel -f wheels -w wheels -r source-only.txt --no-deps
 
 .PHONY: clean
 clean:
